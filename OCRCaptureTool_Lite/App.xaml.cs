@@ -7,7 +7,7 @@ namespace OCRCaptureTool;
 
 public partial class App : System.Windows.Application
 {
-    public const string Version = "0.2.0";
+    public const string Version = "0.2.1";
     private StartupWindow? _startupWindow;
     private string? _readyFile;
     private string? _failureFile;
@@ -64,7 +64,11 @@ public partial class App : System.Windows.Application
                 Trace($"OCR init progress {percent}%: {p.Message}");
             });
 
-            await _pendingOcr.InitializeAsync(progress);
+            var initTask = _pendingOcr.InitializeAsync(progress);
+            var initWinner = await Task.WhenAny(initTask, Task.Delay(TimeSpan.FromSeconds(60)));
+            if (initWinner != initTask)
+                throw new TimeoutException("PP-OCRv6 Small 初始化超过 60 秒，已停止等待。请查看 startup_trace.log。 ");
+            await initTask;
             Trace("ONNX OCR engine initialized.");
 
             _startupWindow?.SetProgress(97, "正在加载历史记录与快捷键", "OCR 引擎已就绪，正在创建与 Full 一致的主界面…");

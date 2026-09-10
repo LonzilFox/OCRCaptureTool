@@ -124,7 +124,7 @@
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="20"/></Grid.ColumnDefinitions>
                             <TextBlock x:Name="StatusDot" Text="●" Foreground="{StaticResource Green}" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0"/>
                             <TextBlock Grid.Column="1" x:Name="StatusText" Text="就绪。按 F8 或点击“截取识别”。" Foreground="#AEB7C8" FontSize="12" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="2" Text="v0.2.0" Foreground="#647086" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <TextBlock Grid.Column="2" Text="v0.2.1" Foreground="#647086" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0"/>
                             <Grid Grid.Column="3" Width="20" Height="20" HorizontalAlignment="Right" VerticalAlignment="Bottom" IsHitTestVisible="False">
                                 <Canvas Width="20" Height="20">
                                     <Line X1="13" Y1="18" X2="18" Y2="13" Stroke="#566176" StrokeThickness="1"/>

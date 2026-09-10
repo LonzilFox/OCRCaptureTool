@@ -1,54 +1,36 @@
-﻿# OCRCaptureTool Lite
+# OCRCaptureTool Lite
 
-当前版本：**v0.2.0**
+Windows screen-region capture and offline text recognition with a dark desktop UI.
 
-OCRCaptureTool Lite 是一个 Windows 区域截图 OCR 工具。按 **F8** 框选屏幕区域后，使用 **PP-OCRv6 Small + RapidOcrNet/ONNX Runtime** 在本地识别中文，并将结果持续累计到历史记录中。
+## OCR engine
 
-## 主要功能
+- .NET 8 / WPF + RapidOcrNet 3.0.0 + ONNX Runtime
+- PP-OCRv6 **Small** detection and recognition models (approximately 30-35 MB before other runtime dependencies)
+- Local inference; screenshots and recognized text are not uploaded for OCR
+- Same interface and features as the other edition; only the OCR model profile differs
 
-- F8 全局快捷键框选 OCR
-- PP-OCRv6 Small 中文识别
-- 与 Full 对齐的主界面与交互
-- 识别历史、编辑、删除、撤回、恢复与拖动排序
-- 复制全部与导出 TXT
-- 本地处理，截图内容不上传
-- 模型/启动进度显示
+## Run from source
 
-## 使用
+Only two Windows batch entry points are included: `run-dev.bat` and `build-release.bat`.
 
-正常启动：
+Double-click **`run-dev.bat`**. It automatically checks the OCR model files and a .NET SDK (version 8 or newer), downloads only what is missing, restores NuGet dependencies when required, builds the app, and opens the window. Run **`run-dev.bat debug`** from Command Prompt to retain diagnostic output if startup fails (no separate debug BAT is needed).
 
-```text
-run.bat
-```
+The first source run requires internet access if no compatible models or dependencies are already cached. Model downloads are verified with SHA-256 and stored once in `Models/v6/`; model weights and dictionaries are deliberately excluded from the Git repository. The developer launcher automatically validates and repairs this cache; no separate model setup batch file is needed.
 
-调试启动：
+## Usage
 
-```text
-run_debug.bat
-```
+Press **F8** to select a screen region. The OCR result is added to a persistent history. The interface supports editing, reordering and deleting captures, undo/restore, copying the accumulated text, and exporting it to a text file.
 
-检查或准备 PP-OCRv6 Small 模型：
+## Create a portable release
 
-```text
-prepare_models.bat
-```
+Double-click **`build-release.bat`** to produce a Windows x64, self-contained release ZIP in `release/`. The release includes the required ONNX models and .NET desktop runtime, so recipients do not need the source SDK or a separate model download. Its internal folder name does not include the version.
 
-生成 self-contained Windows x64 发布包：
+## Disk usage
 
-```text
-Release.bat
-```
+Source builds read models directly from `Models/v6/`, rather than copying them to `bin/`. Publication streams the final ZIP directly from one temporary publish directory, instead of keeping another complete release folder. `bin/`, `obj/`, `publish_tmp/`, `.dotnet/`, `.cache/`, `release/` and `logs/` are generated local data and are ignored by Git. After closing the app, you may manually delete `bin/`, `obj/`, and `publish_tmp/` to clear build intermediates without removing the downloaded models. NuGet's global cache is managed by .NET and is not removed.
 
-发布产物位于 `release/`，该目录不会提交到 Git。
+## Requirements
 
-## 技术栈
-
-- .NET 8 / WPF
-- RapidOcrNet 3.0.0
-- ONNX Runtime
-- PP-OCRv6 Small
-
-## Full / Lite
-
-Lite 与 Full 保持同一套 UI 和主要功能，只更换 OCR 后端与模型档位。Lite 重点降低发布体积和运行环境复杂度；Full 使用 PP-OCRv6 Medium + PaddleOCR 作为高精度基准版本。
+- Windows 10/11 x64
+- Internet access for first-time model and NuGet/SDK downloads, unless already cached
+- A supported .NET SDK for source builds; `run-dev.bat` can bootstrap one if missing
