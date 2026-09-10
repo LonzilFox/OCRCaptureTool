@@ -1,50 +1,30 @@
-# OCRCaptureTool Full
+﻿# OCRCaptureTool Full
 
-当前版本：**v0.2.0**
+当前版本：**v0.2.1**
 
-OCRCaptureTool Full 是一个 Windows 区域截图 OCR 工具。按 **F8** 框选屏幕区域后，使用 **PP-OCRv6 Medium + PaddleOCR/PaddlePaddle** 在本地识别中文，并将结果持续累计到历史记录中。
-
-## 主要功能
-
-- F8 全局快捷键框选 OCR
-- PP-OCRv6 Medium 中文识别
-- 小字增强与大截图输入限制
-- 识别历史、编辑、删除、撤回、恢复与拖动排序
-- 复制全部与导出 TXT
-- 本地处理，截图内容不上传
-- 启动/模型初始化进度显示
-
-## 使用
-
-源码环境首次运行：
-
-```text
-install_cpu.bat
-run.bat
-```
-
-调试启动：
-
-```text
-run_debug.bat
-```
-
-生成给其他 Windows 用户使用的离线发布包：
-
-```text
-Release.bat
-```
-
-发布产物位于 `release/`，该目录不会提交到 Git。
+Windows 区域截图 OCR 工具。按 **F8** 框选区域后，本地识别文字并持续累计历史。
 
 ## 技术栈
 
-- Python 3.12
-- PySide6
-- PaddlePaddle 3.2.2 CPU
-- PaddleOCR 3.7.0
+- .NET 8 / WPF（可由 .NET 8/9/10+ SDK 构建）
+- RapidOcrNet 3.0.0
+- ONNX Runtime + SkiaSharp
 - PP-OCRv6 Medium
 
-## Full / Lite
+Medium：模型更大，优先识别精度。
 
-Full 优先保持 PaddleOCR 官方推理链路和识别精度，用作高精度/基准版本。Lite 使用 .NET/WPF + RapidOcrNet + PP-OCRv6 Small，重点降低体积并简化运行环境。
+## 运行
+
+直接双击 `run.bat`。无需先执行安装脚本：
+
+1. 自动检查 OCR 模型；缺失时自动修复。
+2. 自动查找任意 **>= .NET 8 SDK**；已安装 .NET 9/10 会直接使用。
+3. 如果完全没有可用 SDK，自动安装工程私有 `.dotnet` SDK。
+4. 自动 restore/build；源码没变化时复用编译缓存。
+5. 启动主程序。
+
+调试启动：`run_debug.bat`。模型手动修复：`prepare_models.bat`。生成朋友版：`Release.bat`。
+
+## GitHub
+
+`.gitignore` 已排除 `.dotnet/`、`.cache/`、`bin/`、`obj/`、`logs/`、`release/` 等生成内容。

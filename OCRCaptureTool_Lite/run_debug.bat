@@ -3,7 +3,7 @@ setlocal
 cd /d "%~dp0"
 chcp 65001 >nul
 title OCRCaptureTool Lite - Debug Launcher
-echo OCRCaptureTool Lite v0.2.0 debug launcher
+echo OCRCaptureTool Lite v0.2.1 debug launcher
 echo This console stays open if startup fails.
 echo.
 powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0run.ps1" -DebugMode

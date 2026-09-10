@@ -1,11 +1,9 @@
-OCRCaptureTool Lite v0.2.0
-==============================
+﻿OCRCaptureTool Lite v0.2.1
 
-1. 正常使用直接双击 run.bat。
-2. F8 框选屏幕区域，识别文字会持续累计。
-3. OCR 使用 PP-OCRv6 Small + RapidOcrNet/ONNX Runtime，本地运行，不上传截图。
-4. Lite 与 Full 主界面保持一致，区别只在 OCR 后端/模型档位。
-5. Models\v6 中模型完整时，不需要联网准备模型。
-6. 如果模型缺失，prepare_models.bat 会先搜索同级/附近 ScreenAssistant 的 PP-OCRv6 Small 模型并直接复制；仍找不到时优先下载 RapidOCR 官方单个离线模型包并提取 DET/REC，最后才使用单模型下载源。
-7. 历史记录保存在 %LOCALAPPDATA%\OCRCaptureToolLite。
-8. 生成朋友版运行 Release.bat，朋友版会携带 Small 模型。
+1. 正常使用只需要双击 run.bat。
+2. run 会自动检查模型和 .NET SDK，不需要先手动安装环境。
+3. 已有 .NET 8/9/10 或更高 SDK 时直接使用；没有时才自动安装工程私有 .NET 8 SDK。
+4. OCR 使用 PP-OCRv6 Small + RapidOcrNet/ONNX Runtime，本地运行，不上传截图。
+5. 按 F8 框选区域识别。
+6. 模型损坏/删除时可手动运行 prepare_models.bat。
+7. 生成朋友版运行 Release.bat；朋友版为 self-contained，不要求对方安装 .NET SDK。

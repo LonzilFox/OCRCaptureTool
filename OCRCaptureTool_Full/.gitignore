@@ -1,32 +1,28 @@
-# Python
-.venv/
-venv/
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-.pytest_cache/
-.mypy_cache/
-
-# Build / release
-build/
-dist/
+# .NET build output
+bin/
+obj/
+publish_tmp/
 release/
-*.spec
+artifacts/
 
-# Local runtime / generated payloads
-runtime/
-model_pack/
-wheelhouse/
-*.log
+# Local logs / generated state
 logs/
+*.log
+*.flag
+
+# Temporary model download files
+Models/v6/.rapidocr-*.whl
+Models/v6/*.download
+Models/v6/*.tmp
 
 # IDE / OS
+.vs/
 .vscode/
 .idea/
-.vs/
 *.user
 *.suo
+*.userosscache
+*.sln.docstates
 .DS_Store
 Thumbs.db
 desktop.ini
@@ -35,3 +31,6 @@ desktop.ini
 *.tmp
 *.temp
 ~$*
+
+.dotnet/
+.cache/

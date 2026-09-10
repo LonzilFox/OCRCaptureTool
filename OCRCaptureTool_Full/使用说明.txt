@@ -1,10 +1,9 @@
-OCRCaptureTool Full v0.2.0
-==============================
+﻿OCRCaptureTool Full v0.2.1
 
-1. 首次源码运行先执行 install_cpu.bat。
-2. 正常启动运行 run.bat；需要查看调试信息时运行 run_debug.bat。
-3. 按 F8 框选屏幕区域进行 OCR，识别结果会持续累计。
-4. Full 使用 Python + PaddlePaddle + PaddleOCR + PP-OCRv6 Medium，优先准确率和官方推理链路兼容性。
-5. 大截图会自动限制输入规模，避免 Medium 在 CPU 上长时间处理超大区域。
-6. 性能/错误日志位于 %LOCALAPPDATA%\OCRCaptureTool\logs。
-7. 需要生成给其他 Windows 用户使用的离线包时运行 Release.bat。
+1. 正常使用只需要双击 run.bat。
+2. run 会自动检查模型和 .NET SDK，不需要先手动安装环境。
+3. 已有 .NET 8/9/10 或更高 SDK 时直接使用；没有时才自动安装工程私有 .NET 8 SDK。
+4. OCR 使用 PP-OCRv6 Medium + RapidOcrNet/ONNX Runtime，本地运行，不上传截图。
+5. 按 F8 框选区域识别。
+6. 模型损坏/删除时可手动运行 prepare_models.bat。
+7. 生成朋友版运行 Release.bat；朋友版为 self-contained，不要求对方安装 .NET SDK。

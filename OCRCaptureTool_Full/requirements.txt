@@ -1,5 +1,0 @@
-numpy>=1.26.4,<2.0
-paddleocr==3.7.0
-PySide6-Essentials>=6.8,<7
-Pillow>=10.4,<13
-pynput>=1.7.7,<2
