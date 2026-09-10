@@ -1,0 +1,33 @@
+# .NET build output
+bin/
+obj/
+publish_tmp/
+release/
+artifacts/
+
+# Local logs / generated state
+logs/
+*.log
+*.flag
+
+# Temporary model download files
+Models/v6/.rapidocr-*.whl
+Models/v6/*.download
+Models/v6/*.tmp
+
+# IDE / OS
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+~$*
