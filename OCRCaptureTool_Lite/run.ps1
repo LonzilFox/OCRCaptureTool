@@ -6,7 +6,7 @@ $Project = Join-Path $Root 'OCRCaptureTool.csproj'
 $Models = Join-Path $Root 'Models'
 $LogDir = Join-Path $Root 'logs'
 $LogFile = Join-Path $LogDir 'run.log'
-$BuildSchema = 'lite-v021-dotnet-auto-small'
+$BuildSchema = 'lite-v021-project-model-cache-no-bin-copy'
 $BuildSchemaFile = Join-Path $LogDir 'build_schema.txt'
 $env:DOTNET_CLI_UI_LANGUAGE = 'en-US'
 $env:DOTNET_NOLOGO = '1'
@@ -69,7 +69,8 @@ try {
     } else {Set-Progress 84 '使用已有编译缓存' '源码没有变化，跳过 NuGet restore 和 WPF 编译。'}
     if(-not $exe){Fail '编译完成后仍未找到 OCRCaptureTool.exe。'}
     $exeDir=Split-Path -Parent $exe
-    foreach($name in $requiredModels){$out=Join-Path (Join-Path $exeDir 'Models') $name;if(-not(Test-Path -LiteralPath $out)){Fail "编译输出缺少模型文件：$out"}}
+    # Source runs access the single shared cache under the project Models/ directory.
+    foreach($name in $requiredModels){$src=Join-Path $Models $name;if(-not(Test-Path -LiteralPath $src)){Fail "源码模型缓存缺少文件：$src"}}
 
     Set-Progress 90 '正在启动 OCRCaptureTool Lite' '启动主程序；主窗口真正显示后才判定成功。'
     $token=[Guid]::NewGuid().ToString('N');$ready=Join-Path $LogDir ("app_ready_{0}.flag" -f $token);$failure=$ready+'.error';Remove-Item $ready,$failure -Force -ErrorAction SilentlyContinue

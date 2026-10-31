@@ -26,6 +26,6 @@
   <ItemGroup>
     <Resource Include="assets\app_icon.png" />
     <Resource Include="assets\app_icon.ico" />
-    <Content Include="Models\v6\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Models\v6\**\*" CopyToOutputDirectory="Never" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

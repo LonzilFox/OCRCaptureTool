@@ -1,9 +1,0 @@
-﻿OCRCaptureTool Lite v0.2.1
-
-1. 正常使用只需要双击 run.bat。
-2. run 会自动检查模型和 .NET SDK，不需要先手动安装环境。
-3. 已有 .NET 8/9/10 或更高 SDK 时直接使用；没有时才自动安装工程私有 .NET 8 SDK。
-4. OCR 使用 PP-OCRv6 Small + RapidOcrNet/ONNX Runtime，本地运行，不上传截图。
-5. 按 F8 框选区域识别。
-6. 模型损坏/删除时可手动运行 prepare_models.bat。
-7. 生成朋友版运行 Release.bat；朋友版为 self-contained，不要求对方安装 .NET SDK。

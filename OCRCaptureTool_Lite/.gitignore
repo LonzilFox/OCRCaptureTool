@@ -34,3 +34,6 @@ desktop.ini
 
 .dotnet/
 .cache/
+
+# Models/dictionaries are downloaded on demand, never commit them
+Models/

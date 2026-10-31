@@ -1,12 +1,89 @@
-﻿$ErrorActionPreference='Stop'
-$Root=Split-Path -Parent $MyInvocation.MyCommand.Path
-$Version='0.2.1';$Name='OCRCaptureTool_Full_v'+$Version;$ReleaseRoot=Join-Path $Root 'release';$Final=Join-Path $ReleaseRoot $Name;$Zip=Join-Path $ReleaseRoot ($Name+'.zip');$Publish=Join-Path $Root 'publish_tmp';$ModelsV6=Join-Path $Root 'Models\v6'
-$env:DOTNET_CLI_UI_LANGUAGE='en-US';$env:DOTNET_NOLOGO='1';$env:DOTNET_CLI_TELEMETRY_OPTOUT='1'
+﻿$ErrorActionPreference = 'Stop'
+$Root = Split-Path -Parent $MyInvocation.MyCommand.Path
+$Version = '0.2.1'
+$Edition = 'Full'
+$Name = 'OCRCaptureTool_Full'
+$ReleaseRoot = Join-Path $Root 'release'
+$Zip = Join-Path $ReleaseRoot ($Name + '_v' + $Version + '.zip')
+$Publish = Join-Path $Root 'publish_tmp'
+$ModelsV6 = Join-Path $Root 'Models\v6'
+$env:DOTNET_CLI_UI_LANGUAGE = 'en-US'
+$env:DOTNET_NOLOGO = '1'
+$env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
 . (Join-Path $Root 'dotnet_bootstrap.ps1')
-Write-Host 'OCRCaptureTool Full publisher' -ForegroundColor Cyan;Write-Host "Version: $Version";Write-Host 'Backend: .NET/WPF + RapidOcrNet + PP-OCRv6 Medium';Write-Host ''
-Write-Host '[1/5] Checking OCR models...' -ForegroundColor Cyan;& powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Root 'prepare_models.ps1') -NoGui;if($LASTEXITCODE -ne 0){throw'Model preparation failed.'}
-Write-Host '[2/5] Checking .NET SDK and publishing...' -ForegroundColor Cyan;$sdkInfo=Resolve-DotNetSdk -Root $Root -Status {param($p,$s,$d) Write-Host("[{0}%] {1} - {2}"-f$p,$s,$d)-ForegroundColor DarkCyan};$dotnet=$sdkInfo.Path;Write-Host("Using SDK: {0}"-f$sdkInfo.Selected);Remove-Item $Publish -Recurse -Force -ErrorAction SilentlyContinue;& $dotnet publish (Join-Path $Root 'OCRCaptureTool.csproj') -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:PublishReadyToRun=false -p:DebugType=None -p:DebugSymbols=false -o $Publish;if($LASTEXITCODE -ne 0){throw'dotnet publish failed.'}
-Write-Host '[3/5] Pruning unused OCR/runtime files...' -ForegroundColor Cyan;$v5Candidates=@((Join-Path $Publish 'models\v5'),(Join-Path $Publish 'Models\v5'));foreach($v5 in $v5Candidates){if(Test-Path $v5){Get-ChildItem $v5 -File|ForEach-Object{if($_.Name-ne'ch_PP-LCNet_x0_25_textline_ori_cls_mobile.onnx'){Remove-Item $_.FullName -Force -ErrorAction SilentlyContinue}}}};Get-ChildItem $Publish -Recurse -File -ErrorAction SilentlyContinue|Where-Object{$_.Extension-in@('.so','.dylib')}|Remove-Item -Force -ErrorAction SilentlyContinue
-Write-Host '[4/5] Building release folder...' -ForegroundColor Cyan;New-Item -ItemType Directory -Force -Path $ReleaseRoot|Out-Null;Remove-Item $Final -Recurse -Force -ErrorAction SilentlyContinue;New-Item -ItemType Directory -Force -Path $Final|Out-Null;Copy-Item "$Publish\*" $Final -Recurse -Force;$ModelOut=Join-Path $Final 'Models\v6';New-Item -ItemType Directory -Force -Path $ModelOut|Out-Null;foreach($n in @('PP-OCRv6_det_medium.onnx','PP-OCRv6_rec_medium.onnx','ppocrv6_medium_dict.txt')){Copy-Item (Join-Path $ModelsV6 $n) $ModelOut -Force};Copy-Item (Join-Path $Root '使用说明.txt') $Final -Force
-$files=Get-ChildItem $Final -Recurse -File;$total=($files|Measure-Object Length -Sum).Sum;$report=New-Object Collections.Generic.List[string];$report.Add('OCRCaptureTool Full v'+$Version+' 发布报告');$report.Add('Backend: .NET/WPF + RapidOcrNet 3.0.0 + PP-OCRv6 Medium');$report.Add(('Release folder size: {0:N1} MB'-f($total/1MB)));$report.Add('');$report.Add('Largest files TOP 20:');$files|Sort-Object Length -Descending|Select-Object -First 20|ForEach-Object{$rel=$_.FullName.Substring($Final.Length).TrimStart('\');$report.Add(('{0,9:N1} MB  {1}'-f($_.Length/1MB),$rel))};[IO.File]::WriteAllLines((Join-Path $Final '发布报告.txt'),$report,[Text.UTF8Encoding]::new($true))
-Write-Host '[5/5] Creating ZIP...' -ForegroundColor Cyan;Remove-Item $Zip -Force -ErrorAction SilentlyContinue;Add-Type -AssemblyName System.IO.Compression;Add-Type -AssemblyName System.IO.Compression.FileSystem;$stream=[IO.File]::Open($Zip,[IO.FileMode]::Create);try{$archive=New-Object IO.Compression.ZipArchive($stream,[IO.Compression.ZipArchiveMode]::Create);try{Get-ChildItem $Final -Recurse -File|ForEach-Object{$rel=$_.FullName.Substring($Final.Length).TrimStart('\');$entry=$archive.CreateEntry(($Name+'/'+($rel-replace'\\','/')),[IO.Compression.CompressionLevel]::Optimal);$ins=[IO.File]::OpenRead($_.FullName);try{$outs=$entry.Open();try{$ins.CopyTo($outs)}finally{$outs.Dispose()}}finally{$ins.Dispose()}}}finally{$archive.Dispose()}}finally{$stream.Dispose()};$zipBytes=(Get-Item $Zip).Length;Remove-Item $Publish -Recurse -Force -ErrorAction SilentlyContinue;Write-Host '';Write-Host(('Publish complete. ZIP size: {0:N1} MB'-f($zipBytes/1MB)))-ForegroundColor Green;Write-Host $Zip
+
+try {
+    Write-Host '[1/5] Verifying / downloading OCR models...' -ForegroundColor Cyan
+    & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Root 'prepare_models.ps1') -NoGui
+    if ($LASTEXITCODE -ne 0) { throw 'Model verification failed.' }
+
+    Write-Host '[2/5] Publishing for Windows x64...' -ForegroundColor Cyan
+    $sdk = Resolve-DotNetSdk -Root $Root -Status { param($p,$s,$d) Write-Host ("[{0}%] {1} - {2}" -f $p,$s,$d) }
+    Remove-Item $Publish -Recurse -Force -ErrorAction SilentlyContinue
+    $dotnet = $sdk.Path
+    & $dotnet publish (Join-Path $Root 'OCRCaptureTool.csproj') -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:PublishReadyToRun=false -p:PublishTrimmed=false -p:DebugType=None -p:DebugSymbols=false -o $Publish
+    if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed.' }
+
+    Write-Host '[3/5] Removing unused model/runtime files...' -ForegroundColor Cyan
+    # RapidOcrNet may bring default v5 assets; retain only its optional orientation classifier.
+    foreach ($folder in @((Join-Path $Publish 'models\v5'), (Join-Path $Publish 'Models\v5'))) {
+        if (Test-Path $folder) {
+            Get-ChildItem $folder -File | Where-Object { $_.Name -ne 'ch_PP-LCNet_x0_25_textline_ori_cls_mobile.onnx' } | Remove-Item -Force
+        }
+    }
+    Get-ChildItem $Publish -Recurse -File | Where-Object { $_.Extension -in @('.pdb','.so','.dylib') -or $_.Name -match '^README([._-]|$)' } | Remove-Item -Force
+
+    # The source project does not distribute models. Publish must include exactly
+    # one copy of each model/dictionary under Models/v6/.
+    $publishedModels = Join-Path $Publish 'Models\v6'
+    New-Item -ItemType Directory -Force -Path $publishedModels | Out-Null
+    foreach ($fileName in @('PP-OCRv6_det_medium.onnx','PP-OCRv6_rec_medium.onnx','ppocrv6_medium_dict.txt')) {
+        $source = Join-Path $ModelsV6 $fileName
+        $destination = Join-Path $publishedModels $fileName
+        if (-not (Test-Path -LiteralPath $source)) { throw "Missing model: $source" }
+        if (-not (Test-Path -LiteralPath $destination)) { Copy-Item -LiteralPath $source -Destination $destination }
+    }
+    $files = @(Get-ChildItem $Publish -Recurse -File)
+    $total = ($files | Measure-Object Length -Sum).Sum
+    $report = New-Object 'System.Collections.Generic.List[string]'
+    $report.Add('OCRCaptureTool ' + $Edition + ' release ' + $Version)
+    $report.Add('Engine: .NET / WPF + RapidOcrNet + PP-OCRv6 Medium')
+    $report.Add(('Uncompressed portable release: {0:N1} MiB' -f ($total / 1MB)))
+    $report.Add('This self-contained release includes the .NET runtime and OCR models.')
+    $report.Add('')
+    $report.Add('Largest files:')
+    $files | Sort-Object Length -Descending | Select-Object -First 20 | ForEach-Object {
+        $rel = $_.FullName.Substring($Publish.Length).TrimStart('\')
+        $report.Add(('{0,8:N1} MiB   {1}' -f ($_.Length / 1MB), $rel))
+    }
+    [IO.File]::WriteAllLines((Join-Path $Publish 'release_report.txt'), $report, [Text.UTF8Encoding]::new($false))
+
+    Write-Host '[4/5] Creating portable ZIP without duplicating the release folder...' -ForegroundColor Cyan
+    New-Item -ItemType Directory -Force -Path $ReleaseRoot | Out-Null
+    Remove-Item $Zip -Force -ErrorAction SilentlyContinue
+    Add-Type -AssemblyName System.IO.Compression
+    $stream = [IO.File]::Open($Zip, [IO.FileMode]::CreateNew)
+    try {
+        $archive = [IO.Compression.ZipArchive]::new($stream, [IO.Compression.ZipArchiveMode]::Create)
+        try {
+            Get-ChildItem $Publish -Recurse -File | ForEach-Object {
+                $relative = $_.FullName.Substring($Publish.Length).TrimStart('\').Replace('\','/')
+                # ZIP contains an unversioned top-level folder.
+                $entry = $archive.CreateEntry(($Name + '/' + $relative), [IO.Compression.CompressionLevel]::Optimal)
+                $inputStream = [IO.File]::OpenRead($_.FullName)
+                try {
+                    $outputStream = $entry.Open()
+                    try { $inputStream.CopyTo($outputStream) } finally { $outputStream.Dispose() }
+                } finally { $inputStream.Dispose() }
+            }
+        } finally { $archive.Dispose() }
+    } finally { $stream.Dispose() }
+
+    Write-Host '[5/5] Release complete.' -ForegroundColor Green
+    Write-Host ('Portable ZIP: ' + $Zip)
+    Write-Host ('ZIP size: {0:N1} MiB' -f ((Get-Item $Zip).Length / 1MB))
+    Write-Host 'No second copy of the published directory was created.'
+} finally {
+    # Eliminates one large temporary copy even if an error occurred.
+    Remove-Item $Publish -Recurse -Force -ErrorAction SilentlyContinue
+}

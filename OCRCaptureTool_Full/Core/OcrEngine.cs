@@ -1,4 +1,4 @@
-using RapidOcrNet;
+﻿using RapidOcrNet;
 
 namespace OCRCaptureTool.Core;
 
@@ -7,7 +7,24 @@ public sealed record OcrResult(string Text, double AverageScore, int LineCount);
 public sealed class OcrEngine : IDisposable
 {
     private RapidOcr? _ocr;
-    private readonly string _modelDir = Path.Combine(AppContext.BaseDirectory, "Models", "v6");
+    // Source builds use the project's model cache directly to avoid copying
+    // 30-140 MB of weights into bin/ on every build. Published builds use the
+    // adjacent Models/v6 directory bundled by build-release.bat.
+    private readonly string _modelDir = ResolveModelDirectory();
+
+    private static string ResolveModelDirectory()
+    {
+        var alongsideExe = Path.Combine(AppContext.BaseDirectory, "Models", "v6");
+        if (File.Exists(Path.Combine(alongsideExe, "PP-OCRv6_det_medium.onnx"))) return alongsideExe;
+
+        DirectoryInfo? dir = new DirectoryInfo(AppContext.BaseDirectory);
+        for (var i = 0; dir is not null && i < 8; dir = dir.Parent, i++)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "OCRCaptureTool.csproj")))
+                return Path.Combine(dir.FullName, "Models", "v6");
+        }
+        return alongsideExe;
+    }
 
     public static string ProgressDetail(int percent) => percent switch
     {
@@ -29,7 +46,7 @@ public sealed class OcrEngine : IDisposable
             var recPath = Path.Combine(_modelDir, "PP-OCRv6_rec_medium.onnx");
             var dictPath = Path.Combine(_modelDir, "ppocrv6_medium_dict.txt");
             foreach (var path in new[] { detPath, recPath, dictPath })
-                if (!File.Exists(path)) throw new FileNotFoundException($"OCR 模型文件缺失：{path}\n直接运行 run.bat 会自动检查/修复模型。", path);
+                if (!File.Exists(path)) throw new FileNotFoundException($"OCR 模型文件缺失：{path}\n直接运行 run-dev.bat 会自动检查/修复模型。", path);
 
             progress?.Report((20, "正在加载 RapidOcrNet / ONNX Runtime"));
             Directory.SetCurrentDirectory(AppContext.BaseDirectory);
