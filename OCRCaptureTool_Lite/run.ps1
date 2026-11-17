@@ -21,7 +21,7 @@ function Open-ProgressWindow {
     Add-Type -AssemblyName System.Windows.Forms; Add-Type -AssemblyName System.Drawing
     [System.Windows.Forms.Application]::EnableVisualStyles()
     $script:Form=New-Object System.Windows.Forms.Form; $script:Form.Text='OCRCaptureTool Lite · 启动'; $script:Form.StartPosition='CenterScreen'; $script:Form.FormBorderStyle='FixedDialog'; $script:Form.MaximizeBox=$false; $script:Form.MinimizeBox=$true; $script:Form.Width=580; $script:Form.Height=220; $script:Form.BackColor=[Drawing.Color]::FromArgb(23,27,35); $script:Form.ForeColor=[Drawing.Color]::FromArgb(237,241,247)
-    $title=New-Object Windows.Forms.Label; $title.Left=24;$title.Top=18;$title.Width=510;$title.Height=24;$title.Font=New-Object Drawing.Font('Microsoft YaHei UI',11,[Drawing.FontStyle]::Bold);$title.Text='OCRCaptureTool Lite · v0.2.1';$script:Form.Controls.Add($title)
+    $title=New-Object Windows.Forms.Label; $title.Left=24;$title.Top=18;$title.Width=510;$title.Height=24;$title.Font=New-Object Drawing.Font('Microsoft YaHei UI',11,[Drawing.FontStyle]::Bold);$title.Text='OCRCaptureTool Lite · v0.2.2';$script:Form.Controls.Add($title)
     $script:StageLabel=New-Object Windows.Forms.Label;$script:StageLabel.Left=24;$script:StageLabel.Top=55;$script:StageLabel.Width=510;$script:StageLabel.Height=26;$script:StageLabel.Font=New-Object Drawing.Font('Microsoft YaHei UI',10,[Drawing.FontStyle]::Bold);$script:StageLabel.Text='正在启动…';$script:Form.Controls.Add($script:StageLabel)
     $script:DetailLabel=New-Object Windows.Forms.Label;$script:DetailLabel.Left=24;$script:DetailLabel.Top=84;$script:DetailLabel.Width=510;$script:DetailLabel.Height=34;$script:DetailLabel.Font=New-Object Drawing.Font('Microsoft YaHei UI',9);$script:DetailLabel.ForeColor=[Drawing.Color]::FromArgb(158,170,190);$script:DetailLabel.Text='检查工程状态…';$script:Form.Controls.Add($script:DetailLabel)
     $script:Progress=New-Object Windows.Forms.ProgressBar;$script:Progress.Left=24;$script:Progress.Top=132;$script:Progress.Width=455;$script:Progress.Height=12;$script:Progress.Minimum=0;$script:Progress.Maximum=100;$script:Progress.Value=0;$script:Progress.Style='Continuous';$script:Form.Controls.Add($script:Progress)
@@ -43,7 +43,30 @@ try {
     if($missing.Count -gt 0){
         Set-Progress 5 '正在修复 OCR 模型' ("缺少："+($missing -join ', ')+'；优先复用本机已有模型。')
         Close-ProgressWindow
-        $prepare=Join-Path $Root 'prepare_models.ps1';$psi=New-Object Diagnostics.ProcessStartInfo;$psi.FileName='powershell.exe';$psi.Arguments="-NoLogo -NoProfile -ExecutionPolicy Bypass -File `"$prepare`" -CalledByRunner";$psi.WorkingDirectory=$Root;$psi.UseShellExecute=$false;$psi.CreateNoWindow=$true;$p=[Diagnostics.Process]::Start($psi);$p.WaitForExit();if($p.ExitCode -ne 0){Fail '模型准备失败，请查看 logs\prepare_models.log。'}
+        $prepare = Join-Path $Root 'prepare_models.ps1'
+        $prepareLog = Join-Path $LogDir 'prepare_models.log'
+        $prepareStdout = Join-Path $LogDir 'prepare_models.stdout.log'
+        $prepareStderr = Join-Path $LogDir 'prepare_models.stderr.log'
+        Set-Content -LiteralPath $prepareLog -Value ("[{0}] Launcher started model preparation." -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')) -Encoding UTF8
+        Remove-Item -LiteralPath $prepareStdout,$prepareStderr -Force -ErrorAction SilentlyContinue
+        $preparePsi = New-Object Diagnostics.ProcessStartInfo
+        $preparePsi.FileName = 'powershell.exe'
+        $preparePsi.Arguments = "-NoLogo -NoProfile -ExecutionPolicy Bypass -File `"$prepare`" -CalledByRunner"
+        $preparePsi.WorkingDirectory = $Root
+        $preparePsi.UseShellExecute = $false
+        $preparePsi.CreateNoWindow = $true
+        $preparePsi.RedirectStandardOutput = $true
+        $preparePsi.RedirectStandardError = $true
+        $prepareProcess = [Diagnostics.Process]::Start($preparePsi)
+        $stdoutTask = $prepareProcess.StandardOutput.ReadToEndAsync()
+        $stderrTask = $prepareProcess.StandardError.ReadToEndAsync()
+        $prepareProcess.WaitForExit()
+        $prepareOutput = $stdoutTask.GetAwaiter().GetResult()
+        $prepareError = $stderrTask.GetAwaiter().GetResult()
+        if ($prepareOutput) { Set-Content -LiteralPath $prepareStdout -Value $prepareOutput -Encoding UTF8; Add-Content -LiteralPath $prepareLog -Value $prepareOutput -Encoding UTF8 }
+        if ($prepareError) { Set-Content -LiteralPath $prepareStderr -Value $prepareError -Encoding UTF8; Add-Content -LiteralPath $prepareLog -Value $prepareError -Encoding UTF8 }
+        Log ("Model preparation process exit code: {0}" -f $prepareProcess.ExitCode)
+        if ($prepareProcess.ExitCode -ne 0) { Fail ("模型准备失败，退出码：{0}。详细输出：{1}" -f $prepareProcess.ExitCode,$prepareLog) }
         Set-Progress 30 'OCR 模型准备完成' 'Small DET、REC、字典均已就绪。'
     } else { Set-Progress 12 'OCR 模型已就绪' '检测模型、识别模型和字典均已存在，不重复下载。' }
 

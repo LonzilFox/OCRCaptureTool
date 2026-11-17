@@ -1,4 +1,4 @@
-# OCRCaptureTool Full
+﻿# OCRCaptureTool Full
 
 Windows screen-region capture and offline text recognition with a dark desktop UI.
 
@@ -19,7 +19,7 @@ The first source run requires internet access if no compatible models or depende
 
 ## Usage
 
-Press **F8** to select a screen region. The OCR result is added to a persistent history. The interface supports editing, reordering and deleting captures, undo/restore, copying the accumulated text, and exporting it to a text file.
+Press **F8** to select a screen region. The OCR result is added to a persistent history. The interface supports editing, reordering and deleting captures, undo/restore, copying the accumulated text, and exporting Markdown or plain text.
 
 ## Create a portable release
 
@@ -34,3 +34,12 @@ Source builds read models directly from `Models/v6/`, rather than copying them t
 - Windows 10/11 x64
 - Internet access for first-time model and NuGet/SDK downloads, unless already cached
 - A supported .NET SDK for source builds; `run-dev.bat` can bootstrap one if missing
+
+
+## Text Layout and Table Formatting
+
+OCR text blocks and optional word/character polygons are reordered using their detected screen coordinates instead of relying only on the recognizer's raw string order. Adjacent character boxes are grouped into text runs, while wide horizontal gaps are retained as potential cell boundaries. The formatter restores reading order, preserves paragraph gaps, and attempts to reconstruct simple tables from repeated horizontal column alignments. When a table is detected, the result is emitted as a Markdown table; multiline fragments within a cell are joined with HTML line-break markers.
+
+Table reconstruction is geometry-based and heuristic. It improves screenshots with clearly separated cell text, but it is not a dedicated table-structure recognition model and cannot reliably recover merged cells, borderless complex layouts, or a table when the OCR detector returns an entire row as one text block.
+
+Results can be exported as Markdown or plain text.

@@ -1,6 +1,6 @@
-# OCRCaptureTool
+﻿# OCRCaptureTool
 
-A Windows screen-capture OCR tool offered in two independent editions. Both editions use the same dark interface, F8 region selection, history editing and rearrangement, undo/restore, text accumulation, clipboard copying, and TXT export. OCR processing runs locally.
+A Windows screen-capture OCR tool offered in two independent editions. Both editions use the same dark interface, F8 region selection, history editing and rearrangement, undo/restore, text accumulation, clipboard copying, and Markdown/TXT export. Both editions use the same geometry-based reading-order and table-layout formatter. OCR processing runs locally.
 
 | Edition | OCR model | Best for |
 | --- | --- | --- |

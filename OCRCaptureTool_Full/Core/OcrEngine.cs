@@ -2,7 +2,7 @@
 
 namespace OCRCaptureTool.Core;
 
-public sealed record OcrResult(string Text, double AverageScore, int LineCount);
+public sealed record OcrResult(string Text, double AverageScore, int LineCount, bool HasTable);
 
 public sealed class OcrEngine : IDisposable
 {
@@ -85,17 +85,20 @@ public sealed class OcrEngine : IDisposable
                 MaxSideLen = enhanceSmallText ? 2200 : 1800,
                 TextScore = 0.35f,
                 DoAngle = false,
+                ReturnWordBox = true,
             };
             var raw = _ocr.Detect(imagePath, options);
-            var text = (raw.StrRes ?? string.Empty).Trim();
-            var lineCount = 0; double scoreSum = 0; var scoreCount = 0;
+            var layout = OcrLayoutFormatter.Format(raw.TextBlocks.Cast<object>(), raw.StrRes ?? string.Empty);
+            var text = layout.Text;
+            var lineCount = 0;
+            double scoreSum = 0; var scoreCount = 0;
             foreach (var block in raw.TextBlocks)
             {
                 lineCount++;
                 if (block.CharScores is null) continue;
                 foreach (var score in block.CharScores) { scoreSum += score; scoreCount++; }
             }
-            return new OcrResult(text, scoreCount > 0 ? scoreSum / scoreCount : 0.0, lineCount);
+            return new OcrResult(text, scoreCount > 0 ? scoreSum / scoreCount : 0.0, lineCount, layout.HasTable);
         });
     }
 

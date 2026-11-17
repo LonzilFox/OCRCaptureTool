@@ -104,7 +104,7 @@ public partial class MainWindow : Window
             var record = new HistoryRecord { Id=id, CreatedAt=DateTime.Now, Text=result.Text, Score=result.AverageScore, LineCount=result.LineCount, ImagePath=imagePath };
             _items.Add(new HistoryItemView { Record=record }); _deleted.Clear(); SaveAndRefresh();
             HistoryList.SelectedItem = _items.Last(); HistoryList.ScrollIntoView(_items.Last());
-            SetStatus($"识别完成 · {result.Text.Length} 字", "ready");
+            SetStatus(result.HasTable ? $"识别完成 · {result.Text.Length} 字 · 已尝试恢复表格结构" : $"识别完成 · {result.Text.Length} 字 · 已按文字位置整理换行", "ready");
         }
         catch (Exception ex)
         {
@@ -130,10 +130,57 @@ public partial class MainWindow : Window
     {
         if(_deleted.Count==0)return; var group=_deleted.Pop(); foreach(var (index,rec) in group) _items.Insert(Math.Clamp(index,0,_items.Count), new HistoryItemView{Record=rec}); SaveAndRefresh();
     }
-    private void Copy_Click(object sender, RoutedEventArgs e) { var t=PlainText(); if(t.Length>0) Clipboard.SetText(t); SetStatus("已复制全部文字", "ready"); }
+    private async void Copy_Click(object sender, RoutedEventArgs e)
+    {
+        var text = PlainText();
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            SetStatus("没有可复制的文字", "warning");
+            return;
+        }
+
+        // Windows may temporarily lock the clipboard (CLIPBRD_E_CANT_OPEN).
+        // Retry on the WPF STA dispatcher instead of allowing an unhandled
+        // COMException to terminate the application.
+        const int maxAttempts = 8;
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            try
+            {
+                Clipboard.SetDataObject(text, true);
+                SetStatus($"已复制全部文字 · {text.Length} 字", "ready");
+                return;
+            }
+            catch (System.Runtime.InteropServices.COMException ex)
+                when (ex.HResult == unchecked((int)0x800401D0))
+            {
+                if (attempt < maxAttempts - 1)
+                    await Task.Delay(60 + attempt * 60);
+            }
+            catch (Exception ex)
+            {
+                Logs.Write("clipboard", ex.ToString());
+                SetStatus("复制失败，请稍后重试", "error");
+                return;
+            }
+        }
+
+        SetStatus("剪贴板持续被占用，复制未完成", "error");
+        MessageBox.Show(this,
+            "Windows 剪贴板正被其他程序占用。请关闭剪贴板管理/同步操作后重试。",
+            "复制失败", MessageBoxButton.OK, MessageBoxImage.Warning);
+    }
     private void Export_Click(object sender, RoutedEventArgs e)
     {
-        var dialog=new Microsoft.Win32.SaveFileDialog{Filter="文本文件 (*.txt)|*.txt",FileName=$"OCR识别结果_{DateTime.Now:yyyyMMdd_HHmmss}.txt"}; if(dialog.ShowDialog(this)==true) File.WriteAllText(dialog.FileName,PlainText());
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = "Markdown 文件 (*.md)|*.md|文本文件 (*.txt)|*.txt",
+            FilterIndex = 1,
+            DefaultExt = ".md",
+            AddExtension = true,
+            FileName = $"OCR识别结果_{DateTime.Now:yyyyMMdd_HHmmss}.md"
+        };
+        if (dialog.ShowDialog(this) == true) File.WriteAllText(dialog.FileName, PlainText(), new System.Text.UTF8Encoding(true));
     }
     private void Clear_Click(object sender, RoutedEventArgs e)
     {

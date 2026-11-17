@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 setlocal
 cd /d "%~dp0"
 if /I "%~1"=="debug" goto debug
@@ -10,7 +10,7 @@ exit /b %ERRORLEVEL%
 :debug
 chcp 65001 >nul
 title OCRCaptureTool Full - Developer Debug
-echo OCRCaptureTool Full v0.2.1 - developer debug mode
+echo OCRCaptureTool Full v0.2.2 - developer debug mode
 echo This window will stay open after the launcher exits.
 echo.
 powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0run.ps1" -DebugMode

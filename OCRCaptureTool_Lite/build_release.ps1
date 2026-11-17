@@ -1,6 +1,6 @@
 ﻿$ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$Version = '0.2.1'
+$Version = '0.2.2'
 $Edition = 'Lite'
 $Name = 'OCRCaptureTool_Lite'
 $ReleaseRoot = Join-Path $Root 'release'

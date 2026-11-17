@@ -7,7 +7,7 @@ namespace OCRCaptureTool;
 
 public partial class App : System.Windows.Application
 {
-    public const string Version = "0.2.1";
+    public const string Version = "0.2.2";
     private StartupWindow? _startupWindow;
     private string? _readyFile;
     private string? _failureFile;
